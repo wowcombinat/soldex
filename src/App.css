@@ -154,3 +154,22 @@ body {
 .info-icon {
   margin-right: 5px;
 }
+
+.wallet-info {
+  display: flex;
+  align-items: center;
+}
+
+.wallet-info span {
+  margin-right: 10px;
+}
+
+.refresh-button {
+  background: none;
+  border: none;
+  color: #61dafb;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
