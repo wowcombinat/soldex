@@ -1,7 +1,27 @@
+:root {
+  --bg-color: #1a1a1a;
+  --text-color: #ffffff;
+  --card-bg: rgba(255, 255, 255, 0.1);
+  --button-bg: rgba(255, 255, 255, 0.2);
+  --button-hover: rgba(255, 255, 255, 0.3);
+  --border-color: rgba(255, 255, 255, 0.1);
+}
+
+.light-mode {
+  --bg-color: #f0f0f0;
+  --text-color: #333333;
+  --card-bg: rgba(0, 0, 0, 0.05);
+  --button-bg: rgba(0, 0, 0, 0.1);
+  --button-hover: rgba(0, 0, 0, 0.2);
+  --border-color: rgba(0, 0, 0, 0.1);
+}
+
 body {
   margin: 0;
   font-family: 'Arial', sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: all 0.3s ease;
 }
 
 .App {
@@ -10,9 +30,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
   font-size: 16px;
-  color: white;
 }
 
 .App-header {
@@ -21,7 +39,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--card-bg);
   backdrop-filter: blur(10px);
   box-sizing: border-box;
 }
@@ -35,6 +53,11 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
 .App-main {
   display: flex;
   flex-direction: column;
@@ -44,8 +67,29 @@ body {
   box-sizing: border-box;
 }
 
-.swap-container {
-  background-color: rgba(255, 255, 255, 0.1);
+.tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.tabs button {
+  background: var(--button-bg);
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  padding: 10px 20px;
+  margin: 0 5px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.tabs button:hover, .tabs button.active {
+  background: var(--button-hover);
+}
+
+.swap-container, .pool-container, .farm-container {
+  background-color: var(--card-bg);
   backdrop-filter: blur(10px);
   padding: 20px;
   border-radius: 20px;
@@ -66,10 +110,10 @@ body {
   font-size: 20px;
 }
 
-.settings-button, .wallet-button {
-  background: rgba(255, 255, 255, 0.2);
+.settings-button, .wallet-button, .theme-toggle {
+  background: var(--button-bg);
   border: none;
-  color: white;
+  color: var(--text-color);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -78,8 +122,8 @@ body {
   transition: all 0.3s ease;
 }
 
-.settings-button:hover, .wallet-button:hover {
-  background: rgba(255, 255, 255, 0.3);
+.settings-button:hover, .wallet-button:hover, .theme-toggle:hover {
+  background: var(--button-hover);
 }
 
 .wallet-button span {
@@ -88,142 +132,4 @@ body {
 
 .token-input {
   display: flex;
-  margin-bottom: 10px;
-}
-
-.amount-input {
-  flex-grow: 1;
-  padding: 15px;
-  font-size: 18px;
-  border: none;
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
-  border-radius: 10px 0 0 10px;
-}
-
-.token-select {
-  padding: 15px;
-  font-size: 18px;
-  color: white;
-  border: none;
-  border-radius: 0 10px 10px 0;
-  cursor: pointer;
-}
-
-.switch-button {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: white;
-  cursor: pointer;
-  margin: 10px 0;
-  width: 100%;
-  padding: 10px;
-  border-radius: 10px;
-  transition: all 0.3s ease;
-}
-
-.switch-button:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.exchange-rate {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 14px;
-  margin-bottom: 20px;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 10px;
-  border-radius: 10px;
-}
-
-.refresh-button {
-  background: none;
-  border: none;
-  color: #61dafb;
-  cursor: pointer;
-}
-
-.swap-button {
-  width: 100%;
-  padding: 15px;
-  font-size: 18px;
-  background: linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.swap-button:hover {
-  opacity: 0.9;
-}
-
-.swap-button:disabled {
-  background: rgba(255, 255, 255, 0.2);
-  cursor: not-allowed;
-}
-
-.info-container {
-  margin-top: 20px;
-  font-size: 12px;
-}
-
-.info-text {
-  display: flex;
-  align-items: center;
-  margin-bottom: 5px;
-}
-
-.info-icon {
-  margin-right: 5px;
-}
-
-.advanced-toggle {
-  margin-top: 20px;
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: white;
-  cursor: pointer;
-  padding: 10px 20px;
-  border-radius: 50px;
-  transition: all 0.3s ease;
-}
-
-.advanced-toggle:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.advanced-info {
-  margin-top: 20px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  padding: 20px;
-  border-radius: 20px;
-  width: 100%;
-  max-width: 400px;
-}
-
-.recent-trades, .market-info {
-  margin-bottom: 20px;
-}
-
-.trade-item, .market-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.trade-item svg, .market-item svg {
-  margin-right: 10px;
-}
-
-.wallet-info {
-  display: flex;
-  align-items: center;
-}
-
-.wallet-info span {
-  margin-right: 10px;
-}
+  margin-bottom: 10px
