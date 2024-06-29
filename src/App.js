@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowDownUp, Wallet, RefreshCw, Info, DollarSign, Settings } from 'lucide-react';
+import { ArrowDownUp, Wallet, RefreshCw, Info, DollarSign, Settings, TrendingUp, Clock } from 'lucide-react';
 import './App.css';
 
 const tokenList = [
-  { symbol: 'SOL', name: 'Solana', balance: 10 },
-  { symbol: 'USDC', name: 'USD Coin', balance: 1000 },
-  { symbol: 'RAY', name: 'Raydium', balance: 100 },
-  { symbol: 'SRM', name: 'Serum', balance: 500 },
+  { symbol: 'SOL', name: 'Solana', balance: 10, color: '#00FFA3' },
+  { symbol: 'USDC', name: 'USD Coin', balance: 1000, color: '#2775CA' },
+  { symbol: 'RAY', name: 'Raydium', balance: 100, color: '#E841424' },
+  { symbol: 'SRM', name: 'Serum', balance: 500, color: '#3B3B98' },
 ];
 
 function App() {
@@ -17,6 +17,8 @@ function App() {
   const [walletConnected, setWalletConnected] = useState(false);
   const [exchangeRate, setExchangeRate] = useState(null);
   const [balances, setBalances] = useState({});
+  const [recentTrades, setRecentTrades] = useState([]);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   useEffect(() => {
     if (fromAmount && fromToken && toToken) {
@@ -37,6 +39,14 @@ function App() {
       [fromToken]: (prev[fromToken] - parseFloat(fromAmount)).toFixed(6),
       [toToken]: (prev[toToken] + parseFloat(toAmount)).toFixed(6)
     }));
+
+    const newTrade = {
+      from: fromToken,
+      to: toToken,
+      amount: fromAmount,
+      date: new Date().toLocaleString()
+    };
+    setRecentTrades([newTrade, ...recentTrades.slice(0, 4)]);
 
     alert(`Swapped ${fromAmount} ${fromToken} to ${toAmount} ${toToken}`);
     setFromAmount('');
@@ -97,6 +107,7 @@ function App() {
               value={fromToken}
               onChange={(e) => setFromToken(e.target.value)}
               className="token-select"
+              style={{backgroundColor: tokenList.find(t => t.symbol === fromToken)?.color}}
             >
               {tokenList.map((token) => (
                 <option key={token.symbol} value={token.symbol}>{token.symbol}</option>
@@ -123,6 +134,7 @@ function App() {
               value={toToken}
               onChange={(e) => setToToken(e.target.value)}
               className="token-select"
+              style={{backgroundColor: tokenList.find(t => t.symbol === toToken)?.color}}
             >
               {tokenList.map((token) => (
                 <option key={token.symbol} value={token.symbol}>{token.symbol}</option>
@@ -156,6 +168,33 @@ function App() {
             </p>
           </div>
         </div>
+        <button className="advanced-toggle" onClick={() => setShowAdvanced(!showAdvanced)}>
+          {showAdvanced ? 'Hide' : 'Show'} Advanced Info
+        </button>
+        {showAdvanced && (
+          <div className="advanced-info">
+            <div className="recent-trades">
+              <h3>Recent Trades</h3>
+              {recentTrades.map((trade, index) => (
+                <div key={index} className="trade-item">
+                  <Clock size={12} />
+                  <span>{trade.date}: {trade.amount} {trade.from} to {trade.to}</span>
+                </div>
+              ))}
+            </div>
+            <div className="market-info">
+              <h3>Market Info</h3>
+              <div className="market-item">
+                <TrendingUp size={12} />
+                <span>24h Volume: $1,234,567</span>
+              </div>
+              <div className="market-item">
+                <TrendingUp size={12} />
+                <span>Total Liquidity: $9,876,543</span>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
