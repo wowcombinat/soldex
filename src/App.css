@@ -1,3 +1,12 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 .App {
   text-align: center;
   background-color: #282c34;
@@ -6,7 +15,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  font-size: calc(10px + 2vmin);
+  font-size: 16px;
   color: white;
 }
 
@@ -17,6 +26,12 @@
   align-items: center;
   padding: 20px;
   background-color: #1a1e23;
+  box-sizing: border-box;
+}
+
+.App-header h1 {
+  margin: 0;
+  font-size: 24px;
 }
 
 .App-main {
@@ -24,13 +39,15 @@
   justify-content: center;
   width: 100%;
   padding: 20px;
+  box-sizing: border-box;
 }
 
 .swap-container {
   background-color: #1a1e23;
   padding: 20px;
   border-radius: 10px;
-  width: 400px;
+  width: 100%;
+  max-width: 400px;
 }
 
 .swap-header {
@@ -40,6 +57,11 @@
   margin-bottom: 20px;
 }
 
+.swap-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
 .settings-button, .wallet-button {
   background: none;
   border: none;
@@ -47,6 +69,11 @@
   cursor: pointer;
   display: flex;
   align-items: center;
+  font-size: 16px;
+}
+
+.wallet-button span {
+  margin-left: 8px;
 }
 
 .token-input {
@@ -79,6 +106,7 @@
   color: white;
   cursor: pointer;
   margin: 10px 0;
+  width: 100%;
 }
 
 .exchange-rate {
