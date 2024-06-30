@@ -1,10 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowDownUp, Wallet, RefreshCw, Info, DollarSign, Settings, TrendingUp, Clock, Moon, Sun, Plus, Minus } from 'lucide-react';
-import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Wallet, Sun, Moon, Plus, Minus } from 'lucide-react';
 import './App.css';
-
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const tokenList = [
   { symbol: 'SOL', name: 'Solana', balance: 10, color: '#00FFA3' },
@@ -23,8 +19,6 @@ function App() {
   const [exchangeRate, setExchangeRate] = useState(null);
   const [balances, setBalances] = useState({});
   const [recentTrades, setRecentTrades] = useState([]);
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [chartData, setChartData] = useState(null);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [notifications, setNotifications] = useState([]);
   const [liquidityPools, setLiquidityPools] = useState([
@@ -33,6 +27,28 @@ function App() {
     { pair: 'SRM-USDC', liquidity: 250000, apy: 15 },
   ]);
 
+  const generateChartData = useCallback(() => {
+    const labels = Array.from({length: 7}, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      return d.toLocaleDateString();
+    }).reverse();
+
+    const data = {
+      labels,
+      datasets: [
+        {
+          label: `${fromToken}/${toToken} Price`,
+          data: labels.map(() => Math.random() * 100),
+          borderColor: 'rgb(75, 192, 192)',
+          tension: 0.1
+        },
+      ],
+    };
+
+    return data;
+  }, [fromToken, toToken]);
+
   useEffect(() => {
     if (fromAmount && fromToken && toToken) {
       const simulatedRate = (Math.random() * 10 + 1).toFixed(6);
@@ -40,7 +56,7 @@ function App() {
       setToAmount((parseFloat(fromAmount) * simulatedRate).toFixed(6));
     }
     generateChartData();
-  }, [fromAmount, fromToken, toToken]);
+  }, [fromAmount, fromToken, toToken, generateChartData]);
 
   const handleSwap = () => {
     if (parseFloat(fromAmount) > balances[fromToken]) {
@@ -81,28 +97,6 @@ function App() {
     const newRate = (Math.random() * 10 + 1).toFixed(6);
     setExchangeRate(newRate);
     setToAmount((parseFloat(fromAmount) * newRate).toFixed(6));
-  };
-
-  const generateChartData = () => {
-    const labels = Array.from({length: 7}, (_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      return d.toLocaleDateString();
-    }).reverse();
-
-    const data = {
-      labels,
-      datasets: [
-        {
-          label: `${fromToken}/${toToken} Price`,
-          data: labels.map(() => Math.random() * 100),
-          borderColor: 'rgb(75, 192, 192)',
-          tension: 0.1
-        },
-      ],
-    };
-
-    setChartData(data);
   };
 
   const toggleTheme = () => {
@@ -172,7 +166,63 @@ function App() {
         </div>
         {activeTab === 'swap' && (
           <div className="swap-container">
-            {/* Swap content (unchanged) */}
+            <div className="swap-header">
+              <h2>Swap</h2>
+            </div>
+            <div className="token-input">
+              <input
+                type="number"
+                value={fromAmount}
+                onChange={(e) => setFromAmount(e.target.value)}
+                placeholder="0.0"
+                className="amount-input"
+              />
+              <select 
+                value={fromToken}
+                onChange={(e) => setFromToken(e.target.value)}
+                className="token-select"
+                style={{backgroundColor: tokenList.find(t => t.symbol === fromToken)?.color}}
+              >
+                {tokenList.map((token) => (
+                  <option key={token.symbol} value={token.symbol}>{token.symbol}</option>
+                ))}
+              </select>
+            </div>
+            <div className="token-input">
+              <input
+                type="number"
+                value={toAmount}
+                readOnly
+                placeholder="0.0"
+                className="amount-input"
+              />
+              <select 
+                value={toToken}
+                onChange={(e) => setToToken(e.target.value)}
+                className="token-select"
+                style={{backgroundColor: tokenList.find(t => t.symbol === toToken)?.color}}
+              >
+                {tokenList.map((token) => (
+                  <option key={token.symbol} value={token.symbol}>{token.symbol}</option>
+                ))}
+              </select>
+            </div>
+            {exchangeRate && (
+              <div className="exchange-rate">
+                <span>Exchange Rate:</span>
+                <span>1 {fromToken} = {exchangeRate} {toToken}</span>
+                <button className="refresh-button" onClick={refreshRate}>
+                  Refresh
+                </button>
+              </div>
+            )}
+            <button
+              onClick={handleSwap}
+              disabled={!walletConnected || !fromAmount}
+              className="swap-button"
+            >
+              {walletConnected ? 'Swap' : 'Connect Wallet to Swap'}
+            </button>
           </div>
         )}
         {activeTab === 'pool' && (
@@ -202,7 +252,6 @@ function App() {
             {/* Add farming options here */}
           </div>
         )}
-        {/* Advanced info section (unchanged) */}
       </main>
       <div className="notifications">
         {notifications.map(notification => (
