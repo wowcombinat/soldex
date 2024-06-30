@@ -293,3 +293,58 @@ body {
     margin-bottom: 10px;
   }
 }
+/* Добавьте эти стили в конец существующего App.css файла */
+
+.charts-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: var(--card-bg);
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.staking-pool {
+  background-color: var(--card-bg);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.staking-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.staking-input {
+  flex-grow: 1;
+  margin-right: 10px;
+  padding: 5px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.profile-container {
+  background-color: var(--card-bg);
+  border-radius: 10px;
+  padding: 20px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.profile-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.profile-info h3 {
+  margin-left: 10px;
+}
+
+.balance-overview, .stake-overview {
+  margin-top: 20px;
+}
