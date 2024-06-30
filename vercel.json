@@ -8,14 +8,7 @@
     }
   ],
   "routes": [
-    { "src": "/static/(.*)", "dest": "/static/$1" },
-    { "src": "/favicon.ico", "dest": "/favicon.ico" },
-    { "src": "/asset-manifest.json", "dest": "/asset-manifest.json" },
-    { "src": "/manifest.json", "dest": "/manifest.json" },
-    { "src": "/precache-manifest.(.*)", "dest": "/precache-manifest.$1" },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
+    { "handle": "filesystem" },
+    { "src": "/.*", "dest": "/index.html" }
   ]
 }
