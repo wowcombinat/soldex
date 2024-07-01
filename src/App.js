@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Wallet, Sun, Moon, Plus, Minus, TrendingUp, User } from 'lucide-react';
+import { Wallet, Sun, Moon, Plus, Minus, User } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import './App.css';
@@ -229,7 +229,56 @@ function App() {
         </div>
         {activeTab === 'swap' && (
           <div className="swap-container">
-            {/* Swap content (unchanged) */}
+            <div className="swap-header">
+              <h2>Swap</h2>
+            </div>
+            <div className="token-input">
+              <input
+                type="number"
+                value={fromAmount}
+                onChange={(e) => setFromAmount(e.target.value)}
+                placeholder="0.0"
+                className="amount-input"
+              />
+              <select 
+                value={fromToken}
+                onChange={(e) => setFromToken(e.target.value)}
+                className="token-select"
+                style={{backgroundColor: tokenList.find(t => t.symbol === fromToken)?.color}}
+              >
+                {tokenList.map((token) => (
+                  <option key={token.symbol} value={token.symbol}>{token.symbol}</option>
+                ))}
+              </select>
+            </div>
+            <div className="token-input">
+              <input
+                type="number"
+                value={toAmount}
+                readOnly
+                placeholder="0.0"
+                className="amount-input"
+              />
+              <select 
+                value={toToken}
+                onChange={(e) => setToToken(e.target.value)}
+                className="token-select"
+                style={{backgroundColor: tokenList.find(t => t.symbol === toToken)?.color}}
+              >
+                {tokenList.map((token) => (
+                  <option key={token.symbol} value={token.symbol}>{token.symbol}</option>
+                ))}
+              </select>
+            </div>
+            {exchangeRate && (
+              <div className="exchange-rate">
+                <span>Exchange Rate: 1 {fromToken} = {exchangeRate} {toToken}</span>
+                <button onClick={refreshRate} className="refresh-button">Refresh Rate</button>
+              </div>
+            )}
+            <button onClick={handleSwap} className="swap-button">
+              Swap
+            </button>
           </div>
         )}
         {activeTab === 'pool' && (
