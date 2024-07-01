@@ -1,5 +1,5 @@
-import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { PublicKey } from "@solana/web3.js";
+import { getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, createTransferInstruction } from "@solana/spl-token";
+import { PublicKey, Transaction } from "@solana/web3.js";
 
 export const swapTokens = async (connection, wallet, fromTokenAddress, toTokenAddress, amount) => {
   // This is a placeholder for the actual swap logic
@@ -10,10 +10,42 @@ export const swapTokens = async (connection, wallet, fromTokenAddress, toTokenAd
   const fromPubkey = new PublicKey(fromTokenAddress);
   const toPubkey = new PublicKey(toTokenAddress);
 
-  const fromToken = new Token(connection, fromPubkey, TOKEN_PROGRAM_ID, wallet.publicKey);
-  const toToken = new Token(connection, toPubkey, TOKEN_PROGRAM_ID, wallet.publicKey);
+  const fromTokenAccount = await getAssociatedTokenAddress(fromPubkey, wallet.publicKey);
+  const toTokenAccount = await getAssociatedTokenAddress(toPubkey, wallet.publicKey);
 
-  // This is where you would implement the actual swap logic
-  // For now, we'll just return true to simulate a successful swap
-  return true;
+  let transaction = new Transaction();
+
+  // Check if the token account exists, if not, create it
+  const toTokenAccountInfo = await connection.getAccountInfo(toTokenAccount);
+  if (!toTokenAccountInfo) {
+    transaction.add(
+      createAssociatedTokenAccountInstruction(
+        wallet.publicKey,
+        toTokenAccount,
+        wallet.publicKey,
+        toPubkey
+      )
+    );
+  }
+
+  // Add transfer instruction to transaction
+  transaction.add(
+    createTransferInstruction(
+      fromTokenAccount,
+      toTokenAccount,
+      wallet.publicKey,
+      amount
+    )
+  );
+
+  // Sign and send the transaction
+  try {
+    const signature = await wallet.sendTransaction(transaction, connection);
+    await connection.confirmTransaction(signature, 'confirmed');
+    console.log('Transaction confirmed:', signature);
+    return true;
+  } catch (error) {
+    console.error('Error:', error);
+    return false;
+  }
 };
