@@ -67,28 +67,24 @@ body {
   box-sizing: border-box;
 }
 
-.tabs {
+nav {
   display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
+  gap: 1rem;
 }
 
-.tabs button {
-  background: var(--button-bg);
-  border: none;
+nav a {
   color: var(--text-color);
-  cursor: pointer;
-  padding: 10px 20px;
-  margin: 0 5px;
-  border-radius: 20px;
-  transition: all 0.3s ease;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.3s ease;
 }
 
-.tabs button:hover, .tabs button.active {
-  background: var(--button-hover);
+nav a:hover {
+  background-color: var(--button-hover);
 }
 
-.swap-container, .pool-container, .farm-container {
+.swap-container, .pool-container, .farm-container, .charts-container, .profile-container, .history-container {
   background-color: var(--card-bg);
   backdrop-filter: blur(10px);
   padding: 20px;
@@ -96,6 +92,7 @@ body {
   width: 100%;
   max-width: 400px;
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  margin-bottom: 20px;
 }
 
 .swap-header {
@@ -193,30 +190,20 @@ body {
   cursor: not-allowed;
 }
 
-.pool-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-}
-
-.pool-item {
+.pool-item, .staking-pool {
   background-color: var(--card-bg);
   border-radius: 10px;
   padding: 20px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
 }
 
-.pool-item h3 {
-  margin-top: 0;
-}
-
-.pool-actions {
+.pool-actions, .staking-actions {
   display: flex;
   justify-content: space-between;
   margin-top: 10px;
 }
 
-.pool-actions button {
+.pool-actions button, .staking-actions button {
   background-color: var(--button-bg);
   color: var(--text-color);
   border: none;
@@ -228,12 +215,52 @@ body {
   transition: background-color 0.3s;
 }
 
-.pool-actions button:hover {
+.pool-actions button:hover, .staking-actions button:hover {
   background-color: var(--button-hover);
 }
 
-.pool-actions button svg {
+.pool-actions button svg, .staking-actions button svg {
   margin-right: 5px;
+}
+
+.staking-input {
+  flex-grow: 1;
+  margin-right: 10px;
+  padding: 5px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.profile-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.profile-info h3 {
+  margin-left: 10px;
+}
+
+.balance-overview, .stake-overview {
+  margin-top: 20px;
+}
+
+.history-container table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.history-container th,
+.history-container td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.history-container th {
+  font-weight: bold;
 }
 
 .notifications {
@@ -285,66 +312,11 @@ body {
     margin-top: 10px;
   }
 
-  .tabs {
+  nav {
     flex-wrap: wrap;
   }
 
-  .tabs button {
+  nav a {
     margin-bottom: 10px;
   }
-}
-/* Добавьте эти стили в конец существующего App.css файла */
-
-.charts-container {
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
-  background-color: var(--card-bg);
-  padding: 20px;
-  border-radius: 10px;
-}
-
-.staking-pool {
-  background-color: var(--card-bg);
-  border-radius: 10px;
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
-.staking-actions {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
-}
-
-.staking-input {
-  flex-grow: 1;
-  margin-right: 10px;
-  padding: 5px;
-  border: 1px solid var(--border-color);
-  border-radius: 5px;
-  background-color: var(--bg-color);
-  color: var(--text-color);
-}
-
-.profile-container {
-  background-color: var(--card-bg);
-  border-radius: 10px;
-  padding: 20px;
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-.profile-info {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.profile-info h3 {
-  margin-left: 10px;
-}
-
-.balance-overview, .stake-overview {
-  margin-top: 20px;
 }
