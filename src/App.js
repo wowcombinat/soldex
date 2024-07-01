@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Wallet, Sun, Moon, Plus, Minus, User } from 'lucide-react';
+import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import { Wallet, Sun, Moon, Plus, Minus, User, History, Search } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import './App.css';
@@ -14,7 +15,6 @@ const tokenList = [
 ];
 
 function App() {
-  const [activeTab, setActiveTab] = useState('swap');
   const [fromToken, setFromToken] = useState('SOL');
   const [toToken, setToToken] = useState('USDC');
   const [fromAmount, setFromAmount] = useState('');
@@ -195,169 +195,230 @@ function App() {
     addNotification(`Unstaked ${amount} ${token}`, 'success');
   };
 
+  const swapProps = { fromToken, setFromToken, toToken, setToToken, fromAmount, setFromAmount, toAmount, exchangeRate, refreshRate, handleSwap };
+  const poolProps = { liquidityPools, addLiquidity, removeLiquidity };
+  const farmProps = { stakingPools, userStakes, stakeTokens, unstakeTokens };
+  const chartsProps = { generateChartData };
+  const profileProps = { balances, userStakes };
+  const historyProps = { recentTrades };
+
   return (
-    <div className={`App ${isDarkMode ? 'dark-mode' : 'light-mode'}`}>
-      <header className="App-header">
-        <h1>Solana DEX</h1>
-        <div className="header-right">
-          {walletConnected ? (
-            <div className="wallet-info">
-              <span>Balance: {balances[fromToken]} {fromToken}</span>
-              <button className="wallet-button">
+    <Router>
+      <div className={`App ${isDarkMode ? 'dark-mode' : 'light-mode'}`}>
+        <header className="App-header">
+          <h1>Solana DEX</h1>
+          <nav>
+            <Link to="/">Swap</Link>
+            <Link to="/pool">Pool</Link>
+            <Link to="/farm">Farm</Link>
+            <Link to="/charts">Charts</Link>
+            <Link to="/profile">Profile</Link>
+            <Link to="/history">History</Link>
+          </nav>
+          <div className="header-right">
+            {walletConnected ? (
+              <div className="wallet-info">
+                <span>Balance: {balances[fromToken]} {fromToken}</span>
+                <button className="wallet-button">
+                  <Wallet size={20} />
+                  <span>Connected</span>
+                </button>
+              </div>
+            ) : (
+              <button onClick={connectWallet} className="wallet-button">
                 <Wallet size={20} />
-                <span>Connected</span>
+                <span>Connect Wallet</span>
               </button>
-            </div>
-          ) : (
-            <button onClick={connectWallet} className="wallet-button">
-              <Wallet size={20} />
-              <span>Connect Wallet</span>
-            </button>
-          )}
-          <button onClick={toggleTheme} className="theme-toggle">
-            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
-        </div>
-      </header>
-      <main className="App-main">
-        <div className="tabs">
-          <button className={activeTab === 'swap' ? 'active' : ''} onClick={() => setActiveTab('swap')}>Swap</button>
-          <button className={activeTab === 'pool' ? 'active' : ''} onClick={() => setActiveTab('pool')}>Pool</button>
-          <button className={activeTab === 'farm' ? 'active' : ''} onClick={() => setActiveTab('farm')}>Farm</button>
-          <button className={activeTab === 'charts' ? 'active' : ''} onClick={() => setActiveTab('charts')}>Charts</button>
-          <button className={activeTab === 'profile' ? 'active' : ''} onClick={() => setActiveTab('profile')}>Profile</button>
-        </div>
-        {activeTab === 'swap' && (
-          <div className="swap-container">
-            <div className="swap-header">
-              <h2>Swap</h2>
-            </div>
-            <div className="token-input">
-              <input
-                type="number"
-                value={fromAmount}
-                onChange={(e) => setFromAmount(e.target.value)}
-                placeholder="0.0"
-                className="amount-input"
-              />
-              <select 
-                value={fromToken}
-                onChange={(e) => setFromToken(e.target.value)}
-                className="token-select"
-                style={{backgroundColor: tokenList.find(t => t.symbol === fromToken)?.color}}
-              >
-                {tokenList.map((token) => (
-                  <option key={token.symbol} value={token.symbol}>{token.symbol}</option>
-                ))}
-              </select>
-            </div>
-            <div className="token-input">
-              <input
-                type="number"
-                value={toAmount}
-                readOnly
-                placeholder="0.0"
-                className="amount-input"
-              />
-              <select 
-                value={toToken}
-                onChange={(e) => setToToken(e.target.value)}
-                className="token-select"
-                style={{backgroundColor: tokenList.find(t => t.symbol === toToken)?.color}}
-              >
-                {tokenList.map((token) => (
-                  <option key={token.symbol} value={token.symbol}>{token.symbol}</option>
-                ))}
-              </select>
-            </div>
-            {exchangeRate && (
-              <div className="exchange-rate">
-                <span>Exchange Rate: 1 {fromToken} = {exchangeRate} {toToken}</span>
-                <button onClick={refreshRate} className="refresh-button">Refresh Rate</button>
-              </div>
             )}
-            <button onClick={handleSwap} className="swap-button">
-              Swap
+            <button onClick={toggleTheme} className="theme-toggle">
+              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
           </div>
-        )}
-        {activeTab === 'pool' && (
-          <div className="pool-container">
-            <h2>Liquidity Pools</h2>
-            {liquidityPools.map(pool => (
-              <div key={pool.pair} className="pool-item">
-                <h3>{pool.pair}</h3>
-                <p>Liquidity: ${pool.liquidity.toLocaleString()}</p>
-                <p>APY: {pool.apy}%</p>
-                <div className="pool-actions">
-                  <button onClick={() => addLiquidity(pool.pair, 1000)}>
-                    <Plus size={16} /> Add Liquidity
-                  </button>
-                  <button onClick={() => removeLiquidity(pool.pair, 1000)}>
-                    <Minus size={16} /> Remove Liquidity
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        {activeTab === 'farm' && (
-          <div className="farm-container">
-            <h2>Yield Farming</h2>
-            {stakingPools.map(pool => (
-              <div key={pool.token} className="staking-pool">
-                <h3>{pool.token} Staking</h3>
-                <p>APY: {pool.apy}%</p>
-                <p>Total Staked: {pool.totalStaked.toLocaleString()} {pool.token}</p>
-                <p>Your Stake: {userStakes[pool.token] || 0} {pool.token}</p>
-                <div className="staking-actions">
-                  <input type="number" placeholder="Amount" className="staking-input" />
-                  <button onClick={() => stakeTokens(pool.token, document.querySelector('.staking-input').value)}>
-                    Stake
-                  </button>
-                  <button onClick={() => unstakeTokens(pool.token, document.querySelector('.staking-input').value)}>
-                    Unstake
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        {activeTab === 'charts' && (
-          <div className="charts-container">
-            <h2>Price Charts</h2>
-            <Line data={generateChartData()} />
-          </div>
-        )}
-        {activeTab === 'profile' && (
-          <div className="profile-container">
-            <h2>User Profile</h2>
-            <div className="profile-info">
-              <User size={48} />
-              <h3>Anonymous User</h3>
+        </header>
+        <main className="App-main">
+          <Routes>
+            <Route path="/" element={<SwapPage {...swapProps} />} />
+            <Route path="/pool" element={<PoolPage {...poolProps} />} />
+            <Route path="/farm" element={<FarmPage {...farmProps} />} />
+            <Route path="/charts" element={<ChartsPage {...chartsProps} />} />
+            <Route path="/profile" element={<ProfilePage {...profileProps} />} />
+            <Route path="/history" element={<HistoryPage {...historyProps} />} />
+          </Routes>
+        </main>
+        <div className="notifications">
+          {notifications.map(notification => (
+            <div key={notification.id} className={`notification ${notification.type}`}>
+              {notification.message}
             </div>
-            <div className="balance-overview">
-              <h3>Token Balances</h3>
-              {Object.entries(balances).map(([token, balance]) => (
-                <p key={token}>{token}: {balance}</p>
-              ))}
-            </div>
-            <div className="stake-overview">
-              <h3>Staked Tokens</h3>
-              {Object.entries(userStakes).map(([token, stake]) => (
-                <p key={token}>{token}: {stake}</p>
-              ))}
-            </div>
+          ))}
+        </div>
+      </div>
+    </Router>
+  );
+}
+
+function SwapPage({ fromToken, setFromToken, toToken, setToToken, fromAmount, setFromAmount, toAmount, exchangeRate, refreshRate, handleSwap }) {
+  return (
+    <div className="swap-container">
+      <div className="swap-header">
+        <h2>Swap</h2>
+      </div>
+      <div className="token-input">
+        <input
+          type="number"
+          value={fromAmount}
+          onChange={(e) => setFromAmount(e.target.value)}
+          placeholder="0.0"
+          className="amount-input"
+        />
+        <select 
+          value={fromToken}
+          onChange={(e) => setFromToken(e.target.value)}
+          className="token-select"
+          style={{backgroundColor: tokenList.find(t => t.symbol === fromToken)?.color}}
+        >
+          {tokenList.map((token) => (
+            <option key={token.symbol} value={token.symbol}>{token.symbol}</option>
+          ))}
+        </select>
+      </div>
+      <div className="token-input">
+        <input
+          type="number"
+          value={toAmount}
+          readOnly
+          placeholder="0.0"
+          className="amount-input"
+        />
+        <select 
+          value={toToken}
+          onChange={(e) => setToToken(e.target.value)}
+          className="token-select"
+          style={{backgroundColor: tokenList.find(t => t.symbol === toToken)?.color}}
+        >
+          {tokenList.map((token) => (
+            <option key={token.symbol} value={token.symbol}>{token.symbol}</option>
+          ))}
+        </select>
+      </div>
+      {exchangeRate && (
+        <div className="exchange-rate">
+          <span>Exchange Rate: 1 {fromToken} = {exchangeRate} {toToken}</span>
+          <button onClick={refreshRate} className="refresh-button">Refresh Rate</button>
+        </div>
+      )}
+      <button onClick={handleSwap} className="swap-button">
+        Swap
+      </button>
+    </div>
+  );
+}
+
+function PoolPage({ liquidityPools, addLiquidity, removeLiquidity }) {
+  return (
+    <div className="pool-container">
+      <h2>Liquidity Pools</h2>
+      {liquidityPools.map(pool => (
+        <div key={pool.pair} className="pool-item">
+          <h3>{pool.pair}</h3>
+          <p>Liquidity: ${pool.liquidity.toLocaleString()}</p>
+          <p>APY: {pool.apy}%</p>
+          <div className="pool-actions">
+            <button onClick={() => addLiquidity(pool.pair, 1000)}>
+              <Plus size={16} /> Add Liquidity
+            </button>
+            <button onClick={() => removeLiquidity(pool.pair, 1000)}>
+              <Minus size={16} /> Remove Liquidity
+            </button>
           </div>
-        )}
-      </main>
-      <div className="notifications">
-        {notifications.map(notification => (
-          <div key={notification.id} className={`notification ${notification.type}`}>
-            {notification.message}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FarmPage({ stakingPools, userStakes, stakeTokens, unstakeTokens }) {
+  return (
+    <div className="farm-container">
+      <h2>Yield Farming</h2>
+      {stakingPools.map(pool => (
+        <div key={pool.token} className="staking-pool">
+          <h3>{pool.token} Staking</h3>
+          <p>APY: {pool.apy}%</p>
+          <p>Total Staked: {pool.totalStaked.toLocaleString()} {pool.token}</p>
+          <p>Your Stake: {userStakes[pool.token] || 0} {pool.token}</p>
+          <div className="staking-actions">
+            <input type="number" placeholder="Amount" className="staking-input" />
+            <button onClick={() => stakeTokens(pool.token, document.querySelector('.staking-input').value)}>
+              Stake
+            </button>
+            <button onClick={() => unstakeTokens(pool.token, document.querySelector('.staking-input').value)}>
+              Unstake
+            </button>
           </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ChartsPage({ generateChartData }) {
+  return (
+    <div className="charts-container">
+      <h2>Price Charts</h2>
+      <Line data={generateChartData()} />
+    </div>
+  );
+}
+
+function ProfilePage({ balances, userStakes }) {
+  return (
+    <div className="profile-container">
+      <h2>User Profile</h2>
+      <div className="profile-info">
+        <User size={48} />
+        <h3>Anonymous User</h3>
+      </div>
+      <div className="balance-overview">
+        <h3>Token Balances</h3>
+        {Object.entries(balances).map(([token, balance]) => (
+          <p key={token}>{token}: {balance}</p>
         ))}
       </div>
+      <div className="stake-overview">
+        <h3>Staked Tokens</h3>
+        {Object.entries(userStakes).map(([token, stake]) => (
+          <p key={token}>{token}: {stake}</p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HistoryPage({ recentTrades }) {
+  return (
+    <div className="history-container">
+      <h2>Transaction History</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {recentTrades.map((trade, index) => (
+            <tr key={index}>
+              <td>{trade.date}</td>
+              <td>{trade.from}</td>
+              <td>{trade.to}</td>
+              <td>{trade.amount}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
