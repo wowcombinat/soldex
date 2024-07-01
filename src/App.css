@@ -320,3 +320,63 @@ nav a:hover {
     margin-bottom: 10px;
   }
 }
+/* Добавьте эти стили в конец существующего App.css файла */
+
+.search-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.search-input {
+  flex-grow: 1;
+  padding: 8px;
+  margin-left: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.charts-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.profile-container, .history-container {
+  background-color: var(--card-bg);
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.profile-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.profile-info h3 {
+  margin-left: 10px;
+}
+
+.balance-overview, .stake-overview {
+  margin-top: 20px;
+}
+
+.history-container table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.history-container th,
+.history-container td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.history-container th {
+  font-weight: bold;
+}
