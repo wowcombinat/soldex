@@ -13,7 +13,8 @@
     "react-router-dom": "^6.11.2",
     "react-chartjs-2": "^5.2.0",
     "chart.js": "^4.3.0",
-    "lucide-react": "^0.244.0"
+    "lucide-react": "^0.244.0",
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -38,5 +39,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.0"
   }
 }
