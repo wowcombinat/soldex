@@ -5,6 +5,7 @@ import { Connection } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import TokenSelector from './components/TokenSelector';
+import AmountInput from './components/AmountInput';
 import NotificationCenter from './components/NotificationCenter';
 import { swapTokens } from './services/swapService';
 import { getTokenPrice, getTop100Tokens } from './services/tokenService';
@@ -24,6 +25,7 @@ function App() {
   const [notifications, setNotifications] = useState([]);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [topTokens, setTopTokens] = useState([]);
+  const [activeTab, setActiveTab] = useState('swap');
   const wallet = useWallet();
 
   useEffect(() => {
@@ -68,10 +70,10 @@ function App() {
         <header className="App-header">
           <h1>Solana DEX</h1>
           <nav>
-            <Link to="/">Swap</Link>
-            <Link to="/pool">Pool</Link>
-            <Link to="/farm">Farm</Link>
-            <Link to="/charts">Charts</Link>
+            <Link to="/" onClick={() => setActiveTab('swap')}>Swap</Link>
+            <Link to="/pool" onClick={() => setActiveTab('pool')}>Pool</Link>
+            <Link to="/farm" onClick={() => setActiveTab('farm')}>Farm</Link>
+            <Link to="/charts" onClick={() => setActiveTab('charts')}>Charts</Link>
           </nav>
           <div className="header-right">
             <WalletMultiButton />
@@ -87,11 +89,10 @@ function App() {
                 <h2>Swap</h2>
                 <div className="token-inputs">
                   <div className="token-input">
-                    <input
-                      type="number"
+                    <AmountInput
                       value={fromAmount}
-                      onChange={(e) => setFromAmount(e.target.value)}
-                      placeholder="0.0"
+                      onChange={setFromAmount}
+                      max={wallet.connected ? wallet.balance : Infinity}
                     />
                     <TokenSelector
                       selectedToken={fromToken}
@@ -108,11 +109,10 @@ function App() {
                     <ArrowUpDown size={24} />
                   </button>
                   <div className="token-input">
-                    <input
-                      type="number"
+                    <AmountInput
                       value={toAmount}
-                      onChange={(e) => setToAmount(e.target.value)}
-                      placeholder="0.0"
+                      onChange={setToAmount}
+                      max={Infinity}
                       readOnly
                     />
                     <TokenSelector
