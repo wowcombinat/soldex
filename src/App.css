@@ -1,20 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
 :root {
-  --primary-color: #6C5CE7;
-  --secondary-color: #00CEC9;
-  --background-color: #F0F3F8;
+  --primary-color: #6C63FF;
+  --secondary-color: #4CAF50;
+  --background-color: #F4F7FE;
   --card-bg: #FFFFFF;
-  --text-color: #2D3436;
-  --border-color: #DFE6E9;
-  --success-color: #00B894;
-  --error-color: #D63031;
+  --text-color: #333333;
+  --border-color: #E0E0E0;
+  --success-color: #4CAF50;
+  --error-color: #F44336;
+}
+
+.dark-mode {
+  --primary-color: #BB86FC;
+  --secondary-color: #03DAC6;
+  --background-color: #121212;
+  --card-bg: #1E1E1E;
+  --text-color: #FFFFFF;
+  --border-color: #333333;
 }
 
 body {
+  font-family: 'Poppins', sans-serif;
   background-color: var(--background-color);
   color: var(--text-color);
-  font-family: 'Roboto', sans-serif;
   margin: 0;
   padding: 0;
+  transition: all 0.3s ease;
 }
 
 .App {
@@ -24,18 +36,19 @@ body {
 }
 
 .App-header {
-  background-color: var(--card-bg);
-  border-radius: 15px;
-  padding: 20px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 20px;
+  background-color: var(--card-bg);
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
 }
 
 .App-header h1 {
-  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
   color: var(--primary-color);
 }
 
@@ -55,7 +68,13 @@ nav a:hover {
   color: var(--primary-color);
 }
 
-.wallet-button, .theme-toggle {
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.connect-wallet-btn, .theme-toggle {
   background-color: var(--primary-color);
   color: white;
   border: none;
@@ -66,153 +85,122 @@ nav a:hover {
   display: flex;
   align-items: center;
   gap: 10px;
+  font-weight: 500;
 }
 
-.wallet-button:hover, .theme-toggle:hover {
+.connect-wallet-btn:hover, .theme-toggle:hover {
   background-color: var(--secondary-color);
 }
 
 .App-main {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  justify-content: center;
 }
 
-.swap-container, .pool-container, .farm-container, .charts-container, .profile-container, .history-container {
+.swap-container {
   background-color: var(--card-bg);
   border-radius: 15px;
-  padding: 20px;
+  padding: 30px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
   width: 100%;
-  max-width: 600px;
+  max-width: 500px;
+}
+
+.token-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .token-input {
   display: flex;
-  margin-bottom: 15px;
+  align-items: center;
+  background-color: var(--background-color);
+  border-radius: 10px;
+  overflow: hidden;
 }
 
-.amount-input, .token-select {
-  padding: 12px;
-  font-size: 16px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-}
-
-.amount-input {
+.token-input input {
   flex-grow: 1;
-  margin-right: 10px;
-}
-
-.token-select {
-  min-width: 100px;
-}
-
-.swap-button {
-  background-color: var(--primary-color);
-  color: white;
   border: none;
-  padding: 12px 24px;
-  border-radius: 25px;
+  background: transparent;
+  padding: 15px;
   font-size: 18px;
+  color: var(--text-color);
+}
+
+.switch-tokens-btn {
+  align-self: center;
+  background-color: var(--secondary-color);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  width: 100%;
 }
 
-.swap-button:hover {
-  background-color: var(--secondary-color);
-}
-
-.notification-bar {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 1000;
-}
-
-.notification {
-  background-color: var(--card-bg);
-  color: var(--text-color);
-  padding: 12px 20px;
-  margin-bottom: 10px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-}
-
-.notification.success {
-  border-left: 4px solid var(--success-color);
-}
-
-.notification.error {
-  border-left: 4px solid var(--error-color);
-}
-
-.search-container {
-  display: flex;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.search-input {
-  flex-grow: 1;
-  padding: 10px;
-  font-size: 16px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  margin-left: 10px;
+.switch-tokens-btn:hover {
+  transform: rotate(180deg);
 }
 
 .exchange-rate {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
+  text-align: center;
+  margin: 20px 0;
   font-size: 14px;
+  color: var(--text-color);
 }
 
-.refresh-button {
-  background: none;
-  border: none;
-  color: var(--primary-color);
-  cursor: pointer;
-}
-
-.pool-item, .staking-pool {
-  background-color: var(--background-color);
-  border-radius: 10px;
-  padding: 15px;
-  margin-bottom: 15px;
-}
-
-.pool-actions, .staking-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.staking-input {
-  flex-grow: 1;
-  padding: 8px;
-  font-size: 14px;
-  border: 1px solid var(--border-color);
-  border-radius: 5px;
-}
-
-table {
+.swap-btn {
   width: 100%;
-  border-collapse: collapse;
+  padding: 15px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-th, td {
-  padding: 10px;
-  text-align: left;
+.swap-btn:hover {
+  background-color: var(--secondary-color);
+}
+
+.history-container {
+  background-color: var(--card-bg);
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px;
+}
+
+.history-container ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.history-container li {
+  padding: 10px 0;
   border-bottom: 1px solid var(--border-color);
 }
 
-th {
-  font-weight: bold;
+@media (max-width: 768px) {
+  .App-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  nav {
+    margin-top: 20px;
+  }
+
+  .header-right {
+    margin-top: 20px;
+  }
 }
