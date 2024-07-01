@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
-import { Wallet, Sun, Moon, ArrowUpDown } from 'lucide-react';
-import { Connection, PublicKey } from '@solana/web3.js';
+import { Sun, Moon } from 'lucide-react';
+import { Connection } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import TokenSelector from './components/TokenSelector';
