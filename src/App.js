@@ -1,29 +1,30 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
-import { Wallet, Sun, Moon, Search, ArrowUpDown } from 'lucide-react';
-import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import { Wallet, Sun, Moon, ArrowUpDown } from 'lucide-react';
+import { Connection, PublicKey } from '@solana/web3.js';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import TokenSelector from './components/TokenSelector';
 import NotificationCenter from './components/NotificationCenter';
-import { connectWallet, getTokenBalance, swapTokens } from './services/walletService';
+import { swapTokens } from './services/swapService';
 import { getTokenPrice, getTop100Tokens } from './services/tokenService';
+import ChartComponent from './components/ChartComponent';
+import PoolComponent from './components/PoolComponent';
+import FarmComponent from './components/FarmComponent';
 import './App.css';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+const connection = new Connection('https://api.mainnet-beta.solana.com');
 
 function App() {
   const [fromToken, setFromToken] = useState(null);
   const [toToken, setToToken] = useState(null);
   const [fromAmount, setFromAmount] = useState('');
   const [toAmount, setToAmount] = useState('');
-  const [walletConnected, setWalletConnected] = useState(false);
-  const [walletAddress, setWalletAddress] = useState('');
   const [exchangeRate, setExchangeRate] = useState(null);
-  const [balances, setBalances] = useState({});
-  const [recentTrades, setRecentTrades] = useState([]);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [topTokens, setTopTokens] = useState([]);
+  const wallet = useWallet();
 
   useEffect(() => {
     getTop100Tokens().then(setTopTokens);
@@ -35,42 +36,16 @@ function App() {
     }
   }, [fromToken, toToken]);
 
-  const handleConnectWallet = async () => {
-    try {
-      const { address } = await connectWallet();
-      setWalletAddress(address);
-      setWalletConnected(true);
-      updateBalances(address);
-    } catch (error) {
-      addNotification('Failed to connect wallet', 'error');
-    }
-  };
-
-  const updateBalances = async (address) => {
-    const newBalances = {};
-    for (let token of topTokens) {
-      newBalances[token.symbol] = await getTokenBalance(address, token.address);
-    }
-    setBalances(newBalances);
-  };
-
   const handleSwap = async () => {
-    if (!walletConnected) {
+    if (!wallet.connected) {
       addNotification('Please connect your wallet first', 'error');
       return;
     }
     try {
-      await swapTokens(fromToken.address, toToken.address, fromAmount);
+      await swapTokens(connection, wallet, fromToken.address, toToken.address, fromAmount);
       addNotification(`Swapped ${fromAmount} ${fromToken.symbol} to ${toAmount} ${toToken.symbol}`, 'success');
-      updateBalances(walletAddress);
-      setRecentTrades(prev => [{
-        from: fromToken.symbol,
-        to: toToken.symbol,
-        amount: fromAmount,
-        date: new Date().toLocaleString()
-      }, ...prev.slice(0, 4)]);
     } catch (error) {
-      addNotification('Swap failed', 'error');
+      addNotification('Swap failed: ' + error.message, 'error');
     }
   };
 
@@ -94,20 +69,12 @@ function App() {
           <h1>Solana DEX</h1>
           <nav>
             <Link to="/">Swap</Link>
+            <Link to="/pool">Pool</Link>
+            <Link to="/farm">Farm</Link>
             <Link to="/charts">Charts</Link>
-            <Link to="/history">History</Link>
           </nav>
           <div className="header-right">
-            {walletConnected ? (
-              <div className="wallet-info">
-                <span>{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
-              </div>
-            ) : (
-              <button onClick={handleConnectWallet} className="connect-wallet-btn">
-                <Wallet size={20} />
-                <span>Connect Wallet</span>
-              </button>
-            )}
+            <WalletMultiButton />
             <button onClick={toggleTheme} className="theme-toggle">
               {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
@@ -146,6 +113,7 @@ function App() {
                       value={toAmount}
                       onChange={(e) => setToAmount(e.target.value)}
                       placeholder="0.0"
+                      readOnly
                     />
                     <TokenSelector
                       selectedToken={toToken}
@@ -164,19 +132,9 @@ function App() {
                 </button>
               </div>
             } />
-            <Route path="/charts" element={<div>Charts coming soon</div>} />
-            <Route path="/history" element={
-              <div className="history-container">
-                <h2>Recent Trades</h2>
-                <ul>
-                  {recentTrades.map((trade, index) => (
-                    <li key={index}>
-                      {trade.date}: Swapped {trade.amount} {trade.from} to {trade.to}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            } />
+            <Route path="/pool" element={<PoolComponent />} />
+            <Route path="/farm" element={<FarmComponent />} />
+            <Route path="/charts" element={<ChartComponent />} />
           </Routes>
         </main>
         <NotificationCenter notifications={notifications} />
