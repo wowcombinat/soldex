@@ -1,136 +1,77 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
-import { Wallet, Sun, Moon, Plus, Minus, User, Search } from 'lucide-react';
+import { Wallet, Sun, Moon, Search, ArrowUpDown } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import TokenSelector from './components/TokenSelector';
+import NotificationCenter from './components/NotificationCenter';
+import { connectWallet, getTokenBalance, swapTokens } from './services/walletService';
+import { getTokenPrice, getTop100Tokens } from './services/tokenService';
 import './App.css';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-const tokenList = [
-  { symbol: 'SOL', name: 'Solana', balance: 10, color: '#00FFA3' },
-  { symbol: 'USDC', name: 'USD Coin', balance: 1000, color: '#2775CA' },
-  { symbol: 'RAY', name: 'Raydium', balance: 100, color: '#E84142' },
-  { symbol: 'SRM', name: 'Serum', balance: 500, color: '#3B3B98' },
-];
-
 function App() {
-  const [fromToken, setFromToken] = useState('SOL');
-  const [toToken, setToToken] = useState('USDC');
+  const [fromToken, setFromToken] = useState(null);
+  const [toToken, setToToken] = useState(null);
   const [fromAmount, setFromAmount] = useState('');
   const [toAmount, setToAmount] = useState('');
   const [walletConnected, setWalletConnected] = useState(false);
+  const [walletAddress, setWalletAddress] = useState('');
   const [exchangeRate, setExchangeRate] = useState(null);
   const [balances, setBalances] = useState({});
   const [recentTrades, setRecentTrades] = useState([]);
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [notifications, setNotifications] = useState([]);
-  const [liquidityPools, setLiquidityPools] = useState([
-    { pair: 'SOL-USDC', liquidity: 1000000, apy: 12 },
-    { pair: 'RAY-USDC', liquidity: 500000, apy: 18 },
-    { pair: 'SRM-USDC', liquidity: 250000, apy: 15 },
-  ]);
-  const [stakingPools, setStakingPools] = useState([
-    { token: 'SOL', apy: 5, totalStaked: 1000000 },
-    { token: 'RAY', apy: 10, totalStaked: 500000 },
-    { token: 'SRM', apy: 8, totalStaked: 250000 },
-  ]);
-  const [userStakes, setUserStakes] = useState({});
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredTokens, setFilteredTokens] = useState(tokenList);
+  const [topTokens, setTopTokens] = useState([]);
 
   useEffect(() => {
-    const savedWalletState = localStorage.getItem('walletState');
-    if (savedWalletState) {
-      const { isConnected, balances, userStakes, recentTrades } = JSON.parse(savedWalletState);
-      setWalletConnected(isConnected);
-      setBalances(balances);
-      setUserStakes(userStakes);
-      setRecentTrades(recentTrades);
-    }
+    getTop100Tokens().then(setTopTokens);
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('walletState', JSON.stringify({
-      isConnected: walletConnected,
-      balances,
-      userStakes,
-      recentTrades
-    }));
-  }, [walletConnected, balances, userStakes, recentTrades]);
-
-  const generateChartData = useCallback(() => {
-    const labels = Array.from({length: 30}, (_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      return d.toLocaleDateString();
-    }).reverse();
-
-    const data = {
-      labels,
-      datasets: tokenList.map(token => ({
-        label: token.symbol,
-        data: labels.map(() => Math.random() * 100),
-        borderColor: token.color,
-        tension: 0.1
-      }))
-    };
-
-    return data;
-  }, []);
-
-  useEffect(() => {
-    if (fromAmount && fromToken && toToken) {
-      const simulatedRate = (Math.random() * 10 + 1).toFixed(6);
-      setExchangeRate(simulatedRate);
-      setToAmount((parseFloat(fromAmount) * simulatedRate).toFixed(6));
+    if (fromToken && toToken) {
+      getTokenPrice(fromToken.address, toToken.address).then(setExchangeRate);
     }
-  }, [fromAmount, fromToken, toToken]);
+  }, [fromToken, toToken]);
 
-  const handleSwap = () => {
-    if (parseFloat(fromAmount) > balances[fromToken]) {
-      addNotification('Insufficient balance', 'error');
+  const handleConnectWallet = async () => {
+    try {
+      const { address } = await connectWallet();
+      setWalletAddress(address);
+      setWalletConnected(true);
+      updateBalances(address);
+    } catch (error) {
+      addNotification('Failed to connect wallet', 'error');
+    }
+  };
+
+  const updateBalances = async (address) => {
+    const newBalances = {};
+    for (let token of topTokens) {
+      newBalances[token.symbol] = await getTokenBalance(address, token.address);
+    }
+    setBalances(newBalances);
+  };
+
+  const handleSwap = async () => {
+    if (!walletConnected) {
+      addNotification('Please connect your wallet first', 'error');
       return;
     }
-    
-    setBalances(prev => ({
-      ...prev,
-      [fromToken]: (prev[fromToken] - parseFloat(fromAmount)).toFixed(6),
-      [toToken]: (prev[toToken] + parseFloat(toAmount)).toFixed(6)
-    }));
-
-    const newTrade = {
-      from: fromToken,
-      to: toToken,
-      amount: fromAmount,
-      date: new Date().toLocaleString()
-    };
-    setRecentTrades([newTrade, ...recentTrades.slice(0, 4)]);
-
-    addNotification(`Swapped ${fromAmount} ${fromToken} to ${toAmount} ${toToken}`, 'success');
-    setFromAmount('');
-    setToAmount('');
-  };
-
-  const connectWallet = () => {
-    setWalletConnected(true);
-    const initialBalances = {};
-    tokenList.forEach(token => {
-      initialBalances[token.symbol] = token.balance;
-    });
-    setBalances(initialBalances);
-    addNotification('Wallet connected successfully', 'success');
-  };
-
-  const refreshRate = () => {
-    const newRate = (Math.random() * 10 + 1).toFixed(6);
-    setExchangeRate(newRate);
-    setToAmount((parseFloat(fromAmount) * newRate).toFixed(6));
-  };
-
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-    document.body.classList.toggle('light-mode');
+    try {
+      await swapTokens(fromToken.address, toToken.address, fromAmount);
+      addNotification(`Swapped ${fromAmount} ${fromToken.symbol} to ${toAmount} ${toToken.symbol}`, 'success');
+      updateBalances(walletAddress);
+      setRecentTrades(prev => [{
+        from: fromToken.symbol,
+        to: toToken.symbol,
+        amount: fromAmount,
+        date: new Date().toLocaleString()
+      }, ...prev.slice(0, 4)]);
+    } catch (error) {
+      addNotification('Swap failed', 'error');
+    }
   };
 
   const addNotification = (message, type) => {
@@ -141,126 +82,28 @@ function App() {
     }, 5000);
   };
 
-  const addLiquidity = (pair, amount) => {
-    setLiquidityPools(prev => 
-      prev.map(pool => 
-        pool.pair === pair 
-          ? {...pool, liquidity: pool.liquidity + amount} 
-          : pool
-      )
-    );
-    addNotification(`Added ${amount} liquidity to ${pair} pool`, 'success');
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+    document.body.classList.toggle('dark-mode');
   };
-
-  const removeLiquidity = (pair, amount) => {
-    setLiquidityPools(prev => 
-      prev.map(pool => 
-        pool.pair === pair 
-          ? {...pool, liquidity: Math.max(0, pool.liquidity - amount)} 
-          : pool
-      )
-    );
-    addNotification(`Removed ${amount} liquidity from ${pair} pool`, 'success');
-  };
-
-  const stakeTokens = (token, amount) => {
-    if (parseFloat(amount) > balances[token]) {
-      addNotification('Insufficient balance', 'error');
-      return;
-    }
-
-    setBalances(prev => ({
-      ...prev,
-      [token]: (prev[token] - parseFloat(amount)).toFixed(6)
-    }));
-
-    setUserStakes(prev => ({
-      ...prev,
-      [token]: (parseFloat(prev[token] || 0) + parseFloat(amount)).toFixed(6)
-    }));
-
-    setStakingPools(prev =>
-      prev.map(pool =>
-        pool.token === token
-          ? {...pool, totalStaked: pool.totalStaked + parseFloat(amount)}
-          : pool
-      )
-    );
-
-    addNotification(`Staked ${amount} ${token}`, 'success');
-  };
-
-  const unstakeTokens = (token, amount) => {
-    if (parseFloat(amount) > parseFloat(userStakes[token] || 0)) {
-      addNotification('Insufficient staked balance', 'error');
-      return;
-    }
-
-    setBalances(prev => ({
-      ...prev,
-      [token]: (parseFloat(prev[token]) + parseFloat(amount)).toFixed(6)
-    }));
-
-    setUserStakes(prev => ({
-      ...prev,
-      [token]: (parseFloat(prev[token]) - parseFloat(amount)).toFixed(6)
-    }));
-
-    setStakingPools(prev =>
-      prev.map(pool =>
-        pool.token === token
-          ? {...pool, totalStaked: pool.totalStaked - parseFloat(amount)}
-          : pool
-      )
-    );
-
-    addNotification(`Unstaked ${amount} ${token}`, 'success');
-  };
-
-  const handleSearch = (event) => {
-    const term = event.target.value;
-    setSearchTerm(term);
-    const filtered = tokenList.filter(token => 
-      token.symbol.toLowerCase().includes(term.toLowerCase()) || 
-      token.name.toLowerCase().includes(term.toLowerCase())
-    );
-    setFilteredTokens(filtered);
-  };
-
-  const swapProps = { 
-    fromToken, setFromToken, toToken, setToToken, fromAmount, setFromAmount, 
-    toAmount, exchangeRate, refreshRate, handleSwap, filteredTokens, searchTerm, handleSearch 
-  };
-  const poolProps = { liquidityPools, addLiquidity, removeLiquidity };
-  const farmProps = { stakingPools, userStakes, stakeTokens, unstakeTokens };
-  const chartsProps = { generateChartData };
-  const profileProps = { balances, userStakes };
-  const historyProps = { recentTrades };
 
   return (
     <Router>
-      <div className={`App ${isDarkMode ? 'dark-mode' : 'light-mode'}`}>
+      <div className={`App ${isDarkMode ? 'dark-mode' : ''}`}>
         <header className="App-header">
           <h1>Solana DEX</h1>
           <nav>
             <Link to="/">Swap</Link>
-            <Link to="/pool">Pool</Link>
-            <Link to="/farm">Farm</Link>
             <Link to="/charts">Charts</Link>
-            <Link to="/profile">Profile</Link>
             <Link to="/history">History</Link>
           </nav>
           <div className="header-right">
             {walletConnected ? (
               <div className="wallet-info">
-                <span>Balance: {balances[fromToken]} {fromToken}</span>
-                <button className="wallet-button">
-                  <Wallet size={20} />
-                  <span>Connected</span>
-                </button>
+                <span>{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
               </div>
             ) : (
-              <button onClick={connectWallet} className="wallet-button">
+              <button onClick={handleConnectWallet} className="connect-wallet-btn">
                 <Wallet size={20} />
                 <span>Connect Wallet</span>
               </button>
@@ -272,206 +115,73 @@ function App() {
         </header>
         <main className="App-main">
           <Routes>
-            <Route path="/" element={<SwapPage {...swapProps} />} />
-            <Route path="/pool" element={<PoolPage {...poolProps} />} />
-            <Route path="/farm" element={<FarmPage {...farmProps} />} />
-            <Route path="/charts" element={<ChartsPage {...chartsProps} />} />
-            <Route path="/profile" element={<ProfilePage {...profileProps} />} />
-            <Route path="/history" element={<HistoryPage {...historyProps} />} />
+            <Route path="/" element={
+              <div className="swap-container">
+                <h2>Swap</h2>
+                <div className="token-inputs">
+                  <div className="token-input">
+                    <input
+                      type="number"
+                      value={fromAmount}
+                      onChange={(e) => setFromAmount(e.target.value)}
+                      placeholder="0.0"
+                    />
+                    <TokenSelector
+                      selectedToken={fromToken}
+                      onSelectToken={setFromToken}
+                      tokens={topTokens}
+                    />
+                  </div>
+                  <button className="switch-tokens-btn" onClick={() => {
+                    setFromToken(toToken);
+                    setToToken(fromToken);
+                    setFromAmount(toAmount);
+                    setToAmount(fromAmount);
+                  }}>
+                    <ArrowUpDown size={24} />
+                  </button>
+                  <div className="token-input">
+                    <input
+                      type="number"
+                      value={toAmount}
+                      onChange={(e) => setToAmount(e.target.value)}
+                      placeholder="0.0"
+                    />
+                    <TokenSelector
+                      selectedToken={toToken}
+                      onSelectToken={setToToken}
+                      tokens={topTokens}
+                    />
+                  </div>
+                </div>
+                {exchangeRate && (
+                  <div className="exchange-rate">
+                    <span>1 {fromToken.symbol} = {exchangeRate} {toToken.symbol}</span>
+                  </div>
+                )}
+                <button onClick={handleSwap} className="swap-btn">
+                  Swap
+                </button>
+              </div>
+            } />
+            <Route path="/charts" element={<div>Charts coming soon</div>} />
+            <Route path="/history" element={
+              <div className="history-container">
+                <h2>Recent Trades</h2>
+                <ul>
+                  {recentTrades.map((trade, index) => (
+                    <li key={index}>
+                      {trade.date}: Swapped {trade.amount} {trade.from} to {trade.to}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            } />
           </Routes>
         </main>
-        <NotificationBar notifications={notifications} />
+        <NotificationCenter notifications={notifications} />
       </div>
     </Router>
-  );
-}
-
-function SwapPage({ 
-  fromToken, setFromToken, toToken, setToToken, fromAmount, setFromAmount, 
-  toAmount, exchangeRate, refreshRate, handleSwap, filteredTokens, searchTerm, handleSearch 
-}) {
-  return (
-    <div className="swap-container">
-      <div className="swap-header">
-        <h2>Swap</h2>
-        <div className="search-container">
-          <Search size={20} />
-          <input
-            type="text"
-            placeholder="Search tokens..."
-            value={searchTerm}
-            onChange={handleSearch}
-            className="search-input"
-          />
-        </div>
-      </div>
-      <div className="token-input">
-        <input
-          type="number"
-          value={fromAmount}
-          onChange={(e) => setFromAmount(e.target.value)}
-          placeholder="0.0"
-          className="amount-input"
-        />
-        <select 
-          value={fromToken}
-          onChange={(e) => setFromToken(e.target.value)}
-          className="token-select"
-        >
-          {filteredTokens.map((token) => (
-            <option key={token.symbol} value={token.symbol}>{token.symbol}</option>
-          ))}
-        </select>
-      </div>
-      <div className="token-input">
-        <input
-          type="number"
-          value={toAmount}
-          readOnly
-          placeholder="0.0"
-          className="amount-input"
-        />
-        <select 
-          value={toToken}
-          onChange={(e) => setToToken(e.target.value)}
-          className="token-select"
-        >
-          {filteredTokens.map((token) => (
-            <option key={token.symbol} value={token.symbol}>{token.symbol}</option>
-          ))}
-        </select>
-      </div>
-      {exchangeRate && (
-        <div className="exchange-rate">
-          <span>Exchange Rate: 1 {fromToken} = {exchangeRate} {toToken}</span>
-          <button onClick={refreshRate} className="refresh-button">Refresh Rate</button>
-        </div>
-      )}
-      <button onClick={handleSwap} className="swap-button">
-        Swap
-      </button>
-    </div>
-  );
-}
-
-function PoolPage({ liquidityPools, addLiquidity, removeLiquidity }) {
-  return (
-    <div className="pool-container">
-      <h2>Liquidity Pools</h2>
-      {liquidityPools.map(pool => (
-        <div key={pool.pair} className="pool-item">
-          <h3>{pool.pair}</h3>
-          <p>Liquidity: ${pool.liquidity.toLocaleString()}</p>
-          <p>APY: {pool.apy}%</p>
-          <div className="pool-actions">
-            <button onClick={() => addLiquidity(pool.pair, 1000)}>
-              <Plus size={16} /> Add Liquidity
-            </button>
-            <button onClick={() => removeLiquidity(pool.pair, 1000)}>
-              <Minus size={16} /> Remove Liquidity
-            </button>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function FarmPage({ stakingPools, userStakes, stakeTokens, unstakeTokens }) {
-  return (
-    <div className="farm-container">
-      <h2>Yield Farming</h2>
-      {stakingPools.map(pool => (
-        <div key={pool.token} className="staking-pool">
-          <h3>{pool.token} Staking</h3>
-          <p>APY: {pool.apy}%</p>
-          <p>Total Staked: {pool.totalStaked.toLocaleString()} {pool.token}</p>
-          <p>Your Stake: {userStakes[pool.token] || 0} {pool.token}</p>
-          <div className="staking-actions">
-            <input type="number" placeholder="Amount" className="staking-input" />
-            <button onClick={() => stakeTokens(pool.token, document.querySelector('.staking-input').value)}>
-              Stake
-            </button>
-            <button onClick={() => unstakeTokens(pool.token, document.querySelector('.staking-input').value)}>
-              Unstake
-            </button>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ChartsPage({ generateChartData }) {
-  return (
-    <div className="charts-container">
-      <h2>Price Charts</h2>
-      <Line data={generateChartData()} />
-    </div>
-  );
-}
-
-function ProfilePage({ balances, userStakes }) {
-  return (
-    <div className="profile-container">
-      <h2>User Profile</h2>
-      <div className="profile-info">
-        <User size={48} />
-        <h3>Anonymous User</h3>
-      </div>
-      <div className="balance-overview">
-        <h3>Token Balances</h3>
-        {Object.entries(balances).map(([token, balance]) => (
-          <p key={token}>{token}: {balance}</p>
-        ))}
-      </div>
-      <div className="stake-overview">
-        <h3>Staked Tokens</h3>
-        {Object.entries(userStakes).map(([token, stake]) => (
-          <p key={token}>{token}: {stake}</p>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function HistoryPage({ recentTrades }) {
-  return (
-    <div className="history-container">
-      <h2>Transaction History</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>From</th>
-            <th>To</th>
-            <th>Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          {recentTrades.map((trade, index) => (
-            <tr key={index}>
-              <td>{trade.date}</td>
-              <td>{trade.from}</td>
-              <td>{trade.to}</td>
-              <td>{trade.amount}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function NotificationBar({ notifications }) {
-  return (
-    <div className="notification-bar">
-      {notifications.map(notification => (
-        <div key={notification.id} className={`notification ${notification.type}`}>
-          {notification.type === 'success' ? '✅' : '❌'} {notification.message}
-        </div>
-      ))}
-    </div>
   );
 }
 
