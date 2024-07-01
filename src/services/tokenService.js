@@ -1,14 +1,43 @@
-// Это заглушка. В реальном приложении здесь будут API-запросы к источнику данных о токенах
+import axios from 'axios';
+
+const COINGECKO_API = 'https://api.coingecko.com/api/v3';
+
 export const getTokenPrice = async (fromTokenAddress, toTokenAddress) => {
-  // Имитация получения курса обмена
-  return Math.random() * 10;
+  try {
+    const response = await axios.get(`${COINGECKO_API}/simple/price`, {
+      params: {
+        ids: `${fromTokenAddress},${toTokenAddress}`,
+        vs_currencies: 'usd'
+      }
+    });
+    const fromPrice = response.data[fromTokenAddress].usd;
+    const toPrice = response.data[toTokenAddress].usd;
+    return fromPrice / toPrice;
+  } catch (error) {
+    console.error('Error fetching token price:', error);
+    return null;
+  }
 };
 
 export const getTop100Tokens = async () => {
-  // Имитация получения топ-100 токенов
-  return [
-    { address: "SOL", symbol: "SOL", name: "Solana", logoURI: "https://cryptologos.cc/logos/solana-sol-logo.png" },
-    { address: "USDC", symbol: "USDC", name: "USD Coin", logoURI: "https://cryptologos.cc/logos/usd-coin-usdc-logo.png" },
-    // Добавьте больше токенов здесь...
-  ];
+  try {
+    const response = await axios.get(`${COINGECKO_API}/coins/markets`, {
+      params: {
+        vs_currency: 'usd',
+        order: 'market_cap_desc',
+        per_page: 100,
+        page: 1,
+        sparkline: false
+      }
+    });
+    return response.data.map(token => ({
+      address: token.id,
+      symbol: token.symbol.toUpperCase(),
+      name: token.name,
+      logoURI: token.image
+    }));
+  } catch (error) {
+    console.error('Error fetching top tokens:', error);
+    return [];
+  }
 };
