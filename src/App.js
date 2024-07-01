@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
-import { Wallet, Sun, Moon, Plus, Minus, User } from 'lucide-react';
+import { Wallet, Sun, Moon, Plus, Minus, User, Search } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import './App.css';
@@ -36,6 +36,8 @@ function App() {
     { token: 'SRM', apy: 8, totalStaked: 250000 },
   ]);
   const [userStakes, setUserStakes] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredTokens, setFilteredTokens] = useState(tokenList);
 
   const generateChartData = useCallback(() => {
     const labels = Array.from({length: 30}, (_, i) => {
@@ -195,7 +197,20 @@ function App() {
     addNotification(`Unstaked ${amount} ${token}`, 'success');
   };
 
-  const swapProps = { fromToken, setFromToken, toToken, setToToken, fromAmount, setFromAmount, toAmount, exchangeRate, refreshRate, handleSwap };
+  const handleSearch = (event) => {
+    const term = event.target.value;
+    setSearchTerm(term);
+    const filtered = tokenList.filter(token => 
+      token.symbol.toLowerCase().includes(term.toLowerCase()) || 
+      token.name.toLowerCase().includes(term.toLowerCase())
+    );
+    setFilteredTokens(filtered);
+  };
+
+  const swapProps = { 
+    fromToken, setFromToken, toToken, setToToken, fromAmount, setFromAmount, 
+    toAmount, exchangeRate, refreshRate, handleSwap, filteredTokens, searchTerm, handleSearch 
+  };
   const poolProps = { liquidityPools, addLiquidity, removeLiquidity };
   const farmProps = { stakingPools, userStakes, stakeTokens, unstakeTokens };
   const chartsProps = { generateChartData };
@@ -257,11 +272,24 @@ function App() {
   );
 }
 
-function SwapPage({ fromToken, setFromToken, toToken, setToToken, fromAmount, setFromAmount, toAmount, exchangeRate, refreshRate, handleSwap }) {
+function SwapPage({ 
+  fromToken, setFromToken, toToken, setToToken, fromAmount, setFromAmount, 
+  toAmount, exchangeRate, refreshRate, handleSwap, filteredTokens, searchTerm, handleSearch 
+}) {
   return (
     <div className="swap-container">
       <div className="swap-header">
         <h2>Swap</h2>
+        <div className="search-container">
+          <Search size={20} />
+          <input
+            type="text"
+            placeholder="Search tokens..."
+            value={searchTerm}
+            onChange={handleSearch}
+            className="search-input"
+          />
+        </div>
       </div>
       <div className="token-input">
         <input
@@ -275,9 +303,8 @@ function SwapPage({ fromToken, setFromToken, toToken, setToToken, fromAmount, se
           value={fromToken}
           onChange={(e) => setFromToken(e.target.value)}
           className="token-select"
-          style={{backgroundColor: tokenList.find(t => t.symbol === fromToken)?.color}}
         >
-          {tokenList.map((token) => (
+          {filteredTokens.map((token) => (
             <option key={token.symbol} value={token.symbol}>{token.symbol}</option>
           ))}
         </select>
@@ -294,9 +321,8 @@ function SwapPage({ fromToken, setFromToken, toToken, setToToken, fromAmount, se
           value={toToken}
           onChange={(e) => setToToken(e.target.value)}
           className="token-select"
-          style={{backgroundColor: tokenList.find(t => t.symbol === toToken)?.color}}
         >
-          {tokenList.map((token) => (
+          {filteredTokens.map((token) => (
             <option key={token.symbol} value={token.symbol}>{token.symbol}</option>
           ))}
         </select>
@@ -354,7 +380,7 @@ function FarmPage({ stakingPools, userStakes, stakeTokens, unstakeTokens }) {
             </button>
             <button onClick={() => unstakeTokens(pool.token, document.querySelector('.staking-input').value)}>
               Unstake
-            </button>
+           </button>
           </div>
         </div>
       ))}
