@@ -39,6 +39,26 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredTokens, setFilteredTokens] = useState(tokenList);
 
+  useEffect(() => {
+    const savedWalletState = localStorage.getItem('walletState');
+    if (savedWalletState) {
+      const { isConnected, balances, userStakes, recentTrades } = JSON.parse(savedWalletState);
+      setWalletConnected(isConnected);
+      setBalances(balances);
+      setUserStakes(userStakes);
+      setRecentTrades(recentTrades);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('walletState', JSON.stringify({
+      isConnected: walletConnected,
+      balances,
+      userStakes,
+      recentTrades
+    }));
+  }, [walletConnected, balances, userStakes, recentTrades]);
+
   const generateChartData = useCallback(() => {
     const labels = Array.from({length: 30}, (_, i) => {
       const d = new Date();
@@ -260,13 +280,7 @@ function App() {
             <Route path="/history" element={<HistoryPage {...historyProps} />} />
           </Routes>
         </main>
-        <div className="notifications">
-          {notifications.map(notification => (
-            <div key={notification.id} className={`notification ${notification.type}`}>
-              {notification.message}
-            </div>
-          ))}
-        </div>
+        <NotificationBar notifications={notifications} />
       </div>
     </Router>
   );
@@ -380,7 +394,7 @@ function FarmPage({ stakingPools, userStakes, stakeTokens, unstakeTokens }) {
             </button>
             <button onClick={() => unstakeTokens(pool.token, document.querySelector('.staking-input').value)}>
               Unstake
-           </button>
+            </button>
           </div>
         </div>
       ))}
@@ -445,6 +459,18 @@ function HistoryPage({ recentTrades }) {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function NotificationBar({ notifications }) {
+  return (
+    <div className="notification-bar">
+      {notifications.map(notification => (
+        <div key={notification.id} className={`notification ${notification.type}`}>
+          {notification.type === 'success' ? '✅' : '❌'} {notification.message}
+        </div>
+      ))}
     </div>
   );
 }
